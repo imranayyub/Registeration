@@ -34,12 +34,12 @@ import static android.R.attr.password;
 
 public class fbRegistrationPage extends AppCompatActivity implements View.OnClickListener {
 
-    EditText UserName, UserEmail, Password, UserDOB;
-    String UName, UEid, Pwd, DOB;
-    //    String username,password,phone;
-    Button RegisterButton;
+    EditText userName, userEmail, password, userPhone;
+    String name, email, passwords, phone;
+    //    String userName,password,phone;
+    Button registerButton;
     boolean email_result = false;
-    boolean validDate = false;
+    boolean validPhone = false;
     private Vibrator vib;
     Animation animShake;
 
@@ -48,14 +48,14 @@ public class fbRegistrationPage extends AppCompatActivity implements View.OnClic
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fb_registration_page);
 
-        UserName = (EditText) findViewById(R.id.UserName);
-        UserEmail = (EditText) findViewById(R.id.UserEmail);
-        Password = (EditText) findViewById(R.id.Password);
-        RegisterButton = (Button) findViewById(R.id.RegisterButton);
-        UserDOB = (EditText) findViewById(R.id.UserDOB);
+        userName = (EditText) findViewById(R.id.userName);
+        userEmail = (EditText) findViewById(R.id.userEmail);
+        password = (EditText) findViewById(R.id.password);
+        registerButton = (Button) findViewById(R.id.registerButton);
+        userPhone = (EditText) findViewById(R.id.userPhone);
         animShake = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.shake);
         vib = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-        RegisterButton.setOnClickListener(this);
+        registerButton.setOnClickListener(this);
 
     }
 
@@ -75,21 +75,21 @@ public class fbRegistrationPage extends AppCompatActivity implements View.OnClic
                 .client(client)
                 .addConverterFactory(GsonConverterFactory.create())     //Using GSON to Convert JSON into POJO.
                 .build();
-        String username = UserEmail.getText().toString();
-        String password = Password.getText().toString();
-        String phone = UserDOB.getText().toString();
+//        String userName = userEmail.getText().toString();
+//        String userpassword = password.getText().toString();
+//        String phone = userPhone.getText().toString();
 
         //Passing Interface to create an implementation.
         ApiInterface apiService = retrofit.create(ApiInterface.class);
         try {
-            Registrationinfo registerationInfo = new Registrationinfo(username, password, phone);
-            registerationInfo.setUsername(username);
-            registerationInfo.setPassword(password);
+            Registrationinfo registerationInfo = new Registrationinfo(email, passwords, phone);
+            registerationInfo.setUsername(email);
+            registerationInfo.setPassword(passwords);
             registerationInfo.setPhone(phone);
-            apiService.savePost(registerationInfo).enqueue(new Callback<String>() {
-                //        apiService.savePost(username, password, phone).enqueue(new Callback<Registrationinfo>() {
+            apiService.register(registerationInfo).enqueue(new Callback<JsonObject>() {
+                //        apiService.savePost(userName, password, phone).enqueue(new Callback<Registrationinfo>() {
                 @Override
-                public void onResponse(Call<String> call, Response<String> response) {
+                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
                     if (response.isSuccessful()) {
 //                            showResponse(
                                Toast.makeText(getApplicationContext(),response.body().toString(),Toast.LENGTH_SHORT).show();
@@ -98,15 +98,16 @@ public class fbRegistrationPage extends AppCompatActivity implements View.OnClic
 
                     } else if (response.code() == 200) {
                         Toast.makeText(getApplicationContext(), "Registeration Successful.. ", Toast.LENGTH_SHORT).show();
-                    } else if (response.code() == 500) {
-                        Toast.makeText(getApplicationContext(), "Some Error occured ", Toast.LENGTH_SHORT).show();
+                    }
+                    else if (response.code() == 500) {
+                        Toast.makeText(getApplicationContext(), "Email id and phone no. already in use..", Toast.LENGTH_SHORT).show();
                     } else if (response.code() == 400) {
                         Log.d("Error code : ", "" + response.code());
                     }
                 }
 
                 @Override
-                public void onFailure(Call<String> call, Throwable t) {
+                public void onFailure(Call<JsonObject> call, Throwable t) {
                     t.printStackTrace();
                     Log.e("here", "Unable to submit post to API.");
                     Toast.makeText(getApplicationContext(), "Registeration failed ", Toast.LENGTH_SHORT).show();
@@ -131,85 +132,58 @@ public class fbRegistrationPage extends AppCompatActivity implements View.OnClic
 
     public boolean Validate() {
         boolean valid = true;
-        if (UName.isEmpty() || UName.length() >= 32) {
-            UserName.setError("Please Enter Valid name");
+        if (name.isEmpty() || name.length() >= 32) {
+            userName.setError("Please Enter Valid name");
         }
-        if (UEid.isEmpty()) {
-            UserEmail.setError("Please Enter Email");
-
+        if (email.isEmpty()) {
+            userEmail.setError("Please Enter Email");
+              valid=false;
         } else {
-            isValidEmailAddress(UEid);
+            isValidEmailAddress(email);
             if (email_result) {
-                UserEmail.setText(UEid);
+                userEmail.setText(email);
             } else {
-                UserEmail.setError("Enter valid email address.");
+                userEmail.setError("Enter valid email address.");
+                valid=false;
             }
         }
-        if (Pwd.isEmpty()) {
-            Password.setError("Please enter password");
+        if (passwords.isEmpty()) {
+            valid=false;
+            password.setError("Please enter password");
         } else {
-            if (Pwd.length() >= 8 && isValidPassword(Password.getText().toString())) {
-                Password.setText(Pwd);
+            if (passwords.length() >= 8 && isValidPassword(password.getText().toString())) {
+                password.setText(passwords);
             } else {
-                Password.setError("1.Password must contain alphanumeric value +\n+" +
+                valid=false;
+                password.setError("1.password must contain alphanumeric value +\n+" +
                         "2.Atleast one special character" + "\n" +
-                        "3.Password length mustbe atleast 8");
+                        "3.password length mustbe atleast 8");
             }
         }
-        if (DOB.isEmpty()) {
-            UserDOB.setError("Please enter DOB");
+        if (phone.isEmpty()) {
+            valid=false;
+            userPhone.setError("Please enter phone");
         } else {
-            isvalidDate(DOB);
-            if (validDate) {
-                UserDOB.setText(DOB);
+            isvalidDate(phone);
+            if (validPhone) {
+                userPhone.setText(phone);
             } else {
-                UserDOB.setError("Age should be greater than or equal to 18");
+                valid=false;
+                userPhone.setError("Phone number should be of 10 digits");
             }
         }
 
         return valid;
     }
 
-    public boolean isvalidDate(String DateOfBirth) {
-        String[] s = DateOfBirth.split("/");
-        int day = Integer.parseInt(s[0]);
-        int month = Integer.parseInt(s[1]);
-        int year = Integer.parseInt(s[2]);
-
-        if (year >= 1947 && year <= 1999) {
-            if (month >= 1 && month <= 12) {
-                if (year % 4 == 0 || year % 100 == 0 || year % 400 == 0) {
-                    if (month == 2) {
-                        if (day >= 1 && day <= 29) {
-                            validDate = true;
-                            return validDate;
-                        } else {
-                            UserDOB.setError("February has 29 days in leap year.");
-                        }
-                    }
-                } else if (month == 2) {
-                    if (day >= 1 && day <= 28) {
-                        validDate = true;
-                        return validDate;
-                    } else {
-                        UserDOB.setError("February has 28 days in non leap year.");
-                    }
-                } else if (month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12) {
-                    if (day >= 1 && day <= 30) {
-                        validDate = true;
-                        return validDate;
-                    } else {
-                        return validDate;
-                    }
-                }
-            } else {
-                UserDOB.setError("Month range should be 1 to 12");
-            }
-
-        } else {
-            UserDOB.setError("You are underage.");
+    public boolean isvalidDate(String phoneNumber) {
+       if(phoneNumber.length()==10 ){
+           validPhone=true;
+       }
+        else {
+            userPhone.setError("Invalid Phone Number");
         }
-        return validDate;
+        return validPhone;
     }
 
     public boolean isValidEmailAddress(String email) {
@@ -232,10 +206,10 @@ public class fbRegistrationPage extends AppCompatActivity implements View.OnClic
     }
 
     public void initialize() {
-        UName = UserName.getText().toString();
-        UEid = UserEmail.getText().toString();
-        Pwd = Password.getText().toString();
-        DOB = UserDOB.getText().toString();
+        name = userName.getText().toString();
+        email = userEmail.getText().toString();
+        passwords = password.getText().toString();
+        phone = userPhone.getText().toString();
     }
 
     @Override
@@ -243,36 +217,9 @@ public class fbRegistrationPage extends AppCompatActivity implements View.OnClic
         int id = v.getId();
 
         switch (id) {
-            case R.id.RegisterButton: {
+            case R.id.registerButton: {
                 register();
             }
         }
     }
-//    public void sendPost(String username, String password, String phone) {
-//        ApiInterface.savePost(username,password,phone).enqueue(new Callback<Registrationinfo>() {
-//            @Override
-//            public void onResponse(Call<Registrationinfo> call, Response<Registrationinfo> response) {
-//                if(response.isSuccessful()) {
-//                    showResponse(response.body().toString());
-//                    Log.i(TAG, "post submitted to API." + response.body().toString());
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(Call<Registrationinfo> call, Throwable t) {
-//                Log.e(TAG, "Unable to submit post to API.");
-//
-//            }
-//
-//        });
-//    }
-
-//@Override
-//public String toStrings(String username, String password, String phone) {
-//    return "{" +
-//            "username :'"+'"' + username +'"'+ '\'' +
-//            ", password :'"+'"' + password +'"' +'\'' +
-//            ", phone : " +'"'+ phone +'"'+
-//            '}';
-//}
 }

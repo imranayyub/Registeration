@@ -19,7 +19,10 @@ public interface ApiInterface {
     String BASE_URL = "http://192.168.16.241:3000/";
     @Headers("Content-Type: application/json")
     @POST("register")   //to fetch data from url
-     Call<String> savePost(@Body Registrationinfo body);
+     Call<JsonObject> register(@Body Registrationinfo body);
 
+    @Headers("Content-Type: application/json")
+    @POST("login")
+    Call<JsonObject> login(@Body Registrationinfo body);
 }
 
